@@ -13,7 +13,8 @@ const inquirySchema = new mongoose.Schema({
   },
   message: {
     type: String,
-    required: [true, 'Please add a message']
+    required: [true, 'Please add a message'],
+    trim: true
   },
   contactEmail: {
     type: String,
@@ -22,7 +23,10 @@ const inquirySchema = new mongoose.Schema({
       'Please add a valid email'
     ]
   },
-  contactPhone: String,
+  contactPhone: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     enum: ['pending', 'contacted', 'closed'],

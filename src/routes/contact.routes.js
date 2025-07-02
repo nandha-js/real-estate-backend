@@ -12,18 +12,20 @@ const { protect, authorize } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
+// Apply authentication to all routes
 router.use(protect);
 
-router.route('/')
-  .get(authorize('agent', 'admin'), getInquiries)
-  .post(createInquiry);
+// Public (authenticated) route to create inquiry
+router.post('/', createInquiry);
 
-router.route('/:id')
-  .get(authorize('agent', 'admin'), getInquiry)
-  .put(authorize('agent', 'admin'), updateInquiry)
-  .delete(authorize('agent', 'admin'), deleteInquiry);
+// Admin/Agent only access
+router.get('/', authorize('agent', 'admin'), getInquiries);
+router.get('/:id', authorize('agent', 'admin'), getInquiry);
+router.put('/:id', authorize('agent', 'admin'), updateInquiry);
+router.delete('/:id', authorize('agent', 'admin'), deleteInquiry);
 
-router.route('/property/:propertyId').get(getInquiriesByProperty);
-router.route('/user/:userId').get(getInquiriesByUser);
+// Accessible to authenticated users to view their own inquiries
+router.get('/property/:propertyId', getInquiriesByProperty);
+router.get('/user/:userId', getInquiriesByUser);
 
 module.exports = router;

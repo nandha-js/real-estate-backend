@@ -9,7 +9,9 @@ const { protect, authorize } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
-router.use(protect, authorize('admin'));
+// Protect all admin routes and allow only admin role
+router.use(protect);
+router.use(authorize('admin'));
 
 router.get('/dashboard', getDashboardStats);
 router.get('/users', getUsersStats);

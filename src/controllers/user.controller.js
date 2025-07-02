@@ -5,7 +5,7 @@ const asyncHandler = require('../middlewares/async.middleware');
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Private/Admin
-exports.getUsers = asyncHandler(async (req, res, next) => {
+exports.getUsers = asyncHandler(async (req, res) => {
   res.status(200).json(res.advancedResults);
 });
 
@@ -14,22 +14,17 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
 // @access  Private/Admin
 exports.getUser = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.id);
-
   if (!user) {
-    return next(
-      new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
-    );
+    return next(new ErrorResponse(`User not found with id ${req.params.id}`, 404));
   }
-
   res.status(200).json({ success: true, data: user });
 });
 
 // @desc    Create user
 // @route   POST /api/users
 // @access  Private/Admin
-exports.createUser = asyncHandler(async (req, res, next) => {
+exports.createUser = asyncHandler(async (req, res) => {
   const user = await User.create(req.body);
-
   res.status(201).json({ success: true, data: user });
 });
 
@@ -37,20 +32,29 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/users/:id
 // @access  Private/Admin
 exports.updateUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorResponse(`User not found with id ${req.params.id}`, 404));
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
-  res.status(200).json({ success: true, data: user });
+  res.status(200).json({ success: true, data: updatedUser });
 });
 
 // @desc    Delete user
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
 exports.deleteUser = asyncHandler(async (req, res, next) => {
-  await User.findByIdAndDelete(req.params.id);
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorResponse(`User not found with id ${req.params.id}`, 404));
+  }
 
+  await user.remove();
   res.status(200).json({ success: true, data: {} });
 });
 
@@ -64,6 +68,10 @@ exports.addFavorite = asyncHandler(async (req, res, next) => {
     { new: true }
   );
 
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
   res.status(200).json({ success: true, data: user.favorites });
 });
 
@@ -76,6 +84,10 @@ exports.removeFavorite = asyncHandler(async (req, res, next) => {
     { $pull: { favorites: req.params.propertyId } },
     { new: true }
   );
+
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
 
   res.status(200).json({ success: true, data: user.favorites });
 });

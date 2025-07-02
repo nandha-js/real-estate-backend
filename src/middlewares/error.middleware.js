@@ -5,24 +5,26 @@ const errorHandler = (err, req, res, next) => {
 
   error.message = err.message;
 
-  // Log to console for dev
-  console.log(err.stack.red);
+  // Log stack trace in development
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack?.red || err.stack);
+  }
 
-  // Mongoose bad ObjectId
+  // Handle Mongoose bad ObjectId
   if (err.name === 'CastError') {
     const message = `Resource not found with id of ${err.value}`;
     error = new ErrorResponse(message, 404);
   }
 
-  // Mongoose duplicate key
+  // Handle Mongoose duplicate key error
   if (err.code === 11000) {
     const message = 'Duplicate field value entered';
     error = new ErrorResponse(message, 400);
   }
 
-  // Mongoose validation error
+  // Handle Mongoose validation errors
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message);
+    const message = Object.values(err.errors).map(val => val.message).join(', ');
     error = new ErrorResponse(message, 400);
   }
 

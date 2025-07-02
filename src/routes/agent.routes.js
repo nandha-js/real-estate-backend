@@ -12,16 +12,15 @@ const { protect, authorize } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
-router.route('/')
-  .get(getAgents)
-  .post(protect, authorize('admin'), createAgent);
+// Public Routes
+router.get('/', getAgents);
+router.get('/:id', getAgent);
+router.get('/:id/properties', getAgentProperties);
+router.get('/:id/stats', getAgentStats);
 
-router.route('/:id')
-  .get(getAgent)
-  .put(protect, authorize('agent', 'admin'), updateAgent)
-  .delete(protect, authorize('admin'), deleteAgent);
-
-router.route('/:id/properties').get(getAgentProperties);
-router.route('/:id/stats').get(getAgentStats);
+// Protected Routes
+router.post('/', protect, authorize('admin'), createAgent);
+router.put('/:id', protect, authorize('agent', 'admin'), updateAgent);
+router.delete('/:id', protect, authorize('admin'), deleteAgent);
 
 module.exports = router;

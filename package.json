@@ -2,7 +2,7 @@
   "name": "real-estate-backend",
   "version": "1.0.0",
   "description": "Real Estate API",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
@@ -24,7 +24,7 @@
     "hpp": "^0.2.3",
     "html-to-text": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.13.2",
+    "mongoose": "^8.16.1",
     "morgan": "^1.10.0",
     "node-geocoder": "^3.29.0",
     "nodemailer": "^6.6.2",

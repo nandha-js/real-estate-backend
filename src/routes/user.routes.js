@@ -12,19 +12,20 @@ const { protect, authorize } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
+// Protect all user routes
 router.use(protect);
 
-router.route('/')
-  .get(authorize('admin'), getUsers)
-  .post(authorize('admin'), createUser);
+// Admin-only routes
+router.get('/', authorize('admin'), getUsers);
+router.post('/', authorize('admin'), createUser);
+router.put('/:id', authorize('admin'), updateUser);
+router.delete('/:id', authorize('admin'), deleteUser);
 
-router.route('/:id')
-  .get(getUser)
-  .put(authorize('admin'), updateUser)
-  .delete(authorize('admin'), deleteUser);
+// Accessible by the authenticated user
+router.get('/:id', getUser);
 
-router.route('/favorites/:propertyId')
-  .post(addFavorite)
-  .delete(removeFavorite);
+// Favorite properties (user action)
+router.post('/favorites/:propertyId', addFavorite);
+router.delete('/favorites/:propertyId', removeFavorite);
 
 module.exports = router;

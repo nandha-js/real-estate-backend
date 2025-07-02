@@ -14,18 +14,15 @@ const Property = require('../models/Property');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .get(advancedResults(Property, 'agent'), getProperties)
-  .post(protect, authorize('agent', 'admin'), createProperty);
+// Public routes
+router.get('/', advancedResults(Property, 'agent'), getProperties);
+router.get('/:id', getProperty);
+router.get('/radius/:zipcode/:distance', getPropertiesInRadius);
 
-router
-  .route('/:id')
-  .get(getProperty)
-  .put(protect, authorize('agent', 'admin'), updateProperty)
-  .delete(protect, authorize('agent', 'admin'), deleteProperty);
-
-router.route('/radius/:zipcode/:distance').get(getPropertiesInRadius);
-router.route('/:id/photo').put(protect, authorize('agent', 'admin'), propertyPhotoUpload);
+// Protected routes
+router.post('/', protect, authorize('agent', 'admin'), createProperty);
+router.put('/:id', protect, authorize('agent', 'admin'), updateProperty);
+router.delete('/:id', protect, authorize('agent', 'admin'), deleteProperty);
+router.put('/:id/photo', protect, authorize('agent', 'admin'), propertyPhotoUpload);
 
 module.exports = router;
