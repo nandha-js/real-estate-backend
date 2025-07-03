@@ -15,14 +15,14 @@ const Property = require('../models/Property');
 
 const router = express.Router();
 
-// 🚨 ORDER MATTERS: Place specific routes before dynamic ones like /:id
+// 👉 Radius search (must come before `/:id`)
 router.get('/radius/:zipcode/:distance', getPropertiesInRadius);
 
-// Public
-router.get('/', advancedResults(Property, 'agent'), getProperties);
+// 👉 Public routes
+router.get('/', advancedResults(Property, 'agent'), getProperties); // ✅ supports filters
 router.get('/:id', getProperty);
 
-// Protected (Agents/Admins only)
+// 👉 Protected routes (Agent/Admin)
 router.post('/', protect, authorize('agent', 'admin'), createProperty);
 router.put('/:id', protect, authorize('agent', 'admin'), updateProperty);
 router.delete('/:id', protect, authorize('agent', 'admin'), deleteProperty);

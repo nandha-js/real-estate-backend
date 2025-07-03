@@ -4,11 +4,40 @@ const asyncHandler = require('../middlewares/async.middleware');
 const geocoder = require('../utils/geocoder');
 const cloudinary = require('cloudinary').v2;
 
-// @desc    Get all properties
+// @desc    Get all properties with filters
 // @route   GET /api/properties
 // @access  Public
 exports.getProperties = asyncHandler(async (req, res) => {
-  res.status(200).json(res.advancedResults);
+  const { q, type, minPrice, maxPrice, bedrooms, bathrooms } = req.query;
+
+  let query = {};
+
+  if (q) {
+    query.title = { $regex: q, $options: 'i' };
+  }
+  if (type) {
+    query.type = type;
+  }
+  if (minPrice) {
+    query.price = { ...query.price, $gte: Number(minPrice) };
+  }
+  if (maxPrice) {
+    query.price = { ...query.price, $lte: Number(maxPrice) };
+  }
+  if (bedrooms) {
+    query.bedrooms = Number(bedrooms);
+  }
+  if (bathrooms) {
+    query.bathrooms = Number(bathrooms);
+  }
+
+  const properties = await Property.find(query).populate('agent', 'name email phone');
+
+  res.status(200).json({
+    success: true,
+    count: properties.length,
+    data: properties,
+  });
 });
 
 // @desc    Get single property
@@ -78,7 +107,7 @@ exports.getPropertiesInRadius = asyncHandler(async (req, res, next) => {
 
   const lat = loc[0].latitude;
   const lng = loc[0].longitude;
-  const radius = distance / 3963; // Earth radius in miles
+  const radius = distance / 3963;
 
   const properties = await Property.find({
     location: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
