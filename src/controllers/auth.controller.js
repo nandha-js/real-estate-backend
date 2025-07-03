@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middlewares/async.middleware");
-const sendEmail = require("../utils/sendEmail");
+const Email = require("../utils/sendEmail");
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -10,6 +10,10 @@ const sendEmail = require("../utils/sendEmail");
 exports.register = asyncHandler(async (req, res, next) => {
   const { name, email, password, role } = req.body;
   const user = await User.create({ name, email, password, role });
+
+  // Send welcome email
+  await new Email(user, `${process.env.FRONTEND_URL}/login`).sendWelcome();
+
   sendTokenResponse(user, 200, res);
 });
 
@@ -24,6 +28,7 @@ exports.login = asyncHandler(async (req, res, next) => {
   }
 
   const user = await User.findOne({ email }).select("+password");
+
   if (!user || !(await user.matchPassword(password))) {
     return next(new ErrorResponse("Invalid credentials", 401));
   }
@@ -52,7 +57,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Update user details
-// @route   PUT /api/auth/updatedetails
+// @route   PUT /api/auth/update-details
 // @access  Private
 exports.updateDetails = asyncHandler(async (req, res, next) => {
   const { name, email, phone } = req.body;
@@ -70,7 +75,7 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Update password
-// @route   PUT /api/auth/updatepassword
+// @route   PUT /api/auth/update-password
 // @access  Private
 exports.updatePassword = asyncHandler(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
@@ -94,7 +99,7 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Forgot password
-// @route   POST /api/auth/forgotpassword
+// @route   POST /api/auth/forgot-password
 // @access  Public
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
@@ -106,21 +111,14 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const resetToken = user.getResetPasswordToken();
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${req.protocol}://${req.get(
-    "host"
-  )}/api/auth/resetpassword/${resetToken}`;
-  const message = `You requested a password reset. Please click the link to reset your password:\n\n${resetUrl}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
   try {
-    await sendEmail({
-      email: user.email,
-      subject: "Password Reset Request",
-      message,
-    });
+    await new Email(user, resetUrl).sendPasswordReset();
 
     res.status(200).json({ success: true, data: "Email sent" });
   } catch (err) {
-    console.error("Email sending failed:", err);
+    console.error("❌ Email sending failed:", err);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
@@ -130,7 +128,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Reset password
-// @route   PUT /api/auth/resetpassword/:resettoken
+// @route   PUT /api/auth/reset-password/:resettoken
 // @access  Public
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   const hashedToken = crypto

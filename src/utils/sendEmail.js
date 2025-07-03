@@ -7,37 +7,38 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = `Real Estate <${process.env.FROM_EMAIL}>`;
+    this.from = `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`;
   }
 
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
+      // Use SendGrid or other production SMTP here
       return nodemailer.createTransport({
         service: 'SendGrid',
         auth: {
           user: process.env.SENDGRID_USERNAME,
-          pass: process.env.SENDGRID_PASSWORD
-        }
+          pass: process.env.SENDGRID_PASSWORD,
+        },
       });
     }
 
+    // For development (Mailtrap)
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       auth: {
         user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD
-      }
+        pass: process.env.SMTP_PASSWORD,
+      },
     });
   }
 
   async send(template, subject) {
     try {
-      const compiledTemplate = pug.compileFile(`${__dirname}/../views/email/${template}.pug`);
-      const html = compiledTemplate({
+      const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
         firstName: this.firstName,
         url: this.url,
-        subject
+        subject,
       });
 
       const mailOptions = {
@@ -45,12 +46,13 @@ module.exports = class Email {
         to: this.to,
         subject,
         html,
-        text: htmlToText.fromString(html)
+        text: htmlToText.convert(html),
       };
 
       await this.newTransport().sendMail(mailOptions);
     } catch (err) {
       console.error('❌ Email sending failed:', err);
+      throw err;
     }
   }
 

@@ -17,12 +17,12 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 router.get('/logout', logout);
-router.post('/forgotpassword', forgotPassword);
-router.put('/resetpassword/:resettoken', resetPassword);
+router.post('/forgot-password', forgotPassword); // ✅ FIXED: added hyphen
+router.put('/reset-password/:resettoken', resetPassword); // ✅ FIXED: added hyphen
 
 // Protected routes
 router.get('/me', protect, getMe);
-router.put('/updatedetails', protect, updateDetails);
-router.put('/updatepassword', protect, updatePassword);
+router.put('/update-details', protect, updateDetails); // ✅ added hyphen for consistency
+router.put('/update-password', protect, updatePassword); // ✅ added hyphen
 
 module.exports = router;
